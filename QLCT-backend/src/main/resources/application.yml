@@ -1,0 +1,23 @@
+spring:
+  datasource:
+    url: jdbc:mysql://localhost:3306/expense_tracker_db?useSSL=false&serverTimezone=UTC&allowPublicKeyRetrieval=true
+    username: root
+    password: admin123 # ??i thành m?t kh?u MySQL c?a b?n
+    driver-class-name: com.mysql.cj.jdbc.Driver
+
+  jpa:
+    hibernate:
+      ddl-auto: update # T? ??ng t?o/c?p nh?t b?ng khi ch?y app
+    show-sql: true # Hi?n th? câu l?nh SQL ? console
+    properties:
+      hibernate:
+        dialect: org.hibernate.dialect.MySQLDialect
+
+  security:
+    oauth2:
+      client:
+        registration:
+          google:
+            client-id: 18349381843-j11hhhlf6rdi8q65boo81miboden65t1.apps.googleusercontent.com
+            client-secret: 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
+            scope: profile, email

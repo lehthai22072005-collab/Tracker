@@ -1,0 +1,101 @@
+import { useState, useEffect } from 'react'
+import axios from 'axios'
+import './App.css'
+
+// Cấu hình mặc định cho Axios luôn gửi kèm Cookie khi gọi API
+axios.defaults.withCredentials = true;
+const API_BASE_URL = 'http://localhost:8080';
+
+function App() {
+  const [user, setUser] = useState(null);
+  const [transactions, setTransactions] = useState([]);
+
+  // Hàm kiểm tra xem user đã đăng nhập chưa khi vừa vào web
+  useEffect(() => {
+    checkLoginStatus();
+  }, []);
+
+  const checkLoginStatus = async () => {
+    try {
+      const response = await axios.get(`${API_BASE_URL}/api/user`);
+      if (response.data && response.data.email) {
+        setUser(response.data);
+        fetchTransactions(); // Nếu đã đăng nhập thì gọi tiếp API lấy danh sách chi tiêu
+      }
+    } catch (error) {
+      console.log("Chưa đăng nhập hoặc lỗi:", error);
+    }
+  };
+
+  const fetchTransactions = async () => {
+    try {
+      const response = await axios.get(`${API_BASE_URL}/api/transactions`);
+      setTransactions(response.data);
+    } catch (error) {
+      console.error("Lỗi khi lấy dữ liệu chi tiêu", error);
+    }
+  };
+
+  // Nút đăng nhập sẽ chuyển hướng sang API của Spring Boot
+  const handleLogin = () => {
+    window.location.href = `${API_BASE_URL}/oauth2/authorization/google`;
+  };
+
+  // --- GIAO DIỆN KHI CHƯA ĐĂNG NHẬP ---
+  if (!user) {
+    return (
+      <div className="login-container">
+        <h1>Phần mềm Quản lý Chi tiêu</h1>
+        <p>Vui lòng đăng nhập để tiếp tục</p>
+        <button onClick={handleLogin} className="btn-google">
+          Đăng nhập bằng Gmail
+        </button>
+      </div>
+    );
+  }
+
+  // --- GIAO DIỆN KHI ĐÃ ĐĂNG NHẬP (DASHBOARD) ---
+  return (
+    <div className="dashboard">
+      <header>
+        <h2>Xin chào, {user.name}! 👋</h2>
+        <p>Email: {user.email}</p>
+      </header>
+
+      <div className="content">
+        <h3>Lịch sử giao dịch của bạn</h3>
+        
+        {transactions.length === 0 ? (
+          <p>Bạn chưa có khoản chi tiêu nào.</p>
+        ) : (
+          <table border="1" cellPadding="10" style={{ width: '100%', marginTop: '20px', borderCollapse: 'collapse' }}>
+            <thead>
+              <tr style={{ backgroundColor: '#f4f4f4' }}>
+                <th>ID</th>
+                <th>Mô tả</th>
+                <th>Số tiền (VNĐ)</th>
+                <th>Danh mục</th>
+                <th>Ngày</th>
+              </tr>
+            </thead>
+            <tbody>
+              {transactions.map((t) => (
+                <tr key={t.id}>
+                  <td>{t.id}</td>
+                  <td>{t.description}</td>
+                  <td style={{ color: t.type === 'INCOME' ? 'green' : 'red' }}>
+                    {t.type === 'INCOME' ? '+' : '-'}{t.amount}
+                  </td>
+                  <td>{t.category}</td>
+                  <td>{t.date}</td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        )}
+      </div>
+    </div>
+  )
+}
+
+export default App
